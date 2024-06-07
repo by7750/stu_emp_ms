@@ -1,0 +1,333 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+
+    <base href="/">
+    <link rel="stylesheet" href="css/index.css"/>
+    <!-- Import Vue 3 -->
+    <script src="js/vue.global.js"></script>
+    <!-- Import component library -->
+    <script src="js/index.full.js"></script>
+    <!--jquery-->
+    <script src="js/jquery.js"></script>
+    <!--axios-->
+    <script src="js/axios.js"></script>
+
+    <script src="js/index.iife.min.js"></script>
+
+    <script src="js/request.js"></script>
+
+    <style>
+        .avatar {
+            position: absolute;
+            left: 50%;
+            top: 30%;
+            transform: translate(-50%, -50%);
+        }
+
+        #app {
+            height: 100%;
+        }
+
+        .demo-fit .block {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            flex-grow: 0;
+        }
+
+    </style>
+
+</head>
+<body>
+<div id="app">
+    <el-button type="primary" @click="toAdd">添加学生</el-button>
+    <el-table :data="tableData" stripe>
+        <el-table-column type="expand" fixed>
+            <template #default="props">
+                <div class="block">
+                    <span class="title">{{ 照片 }}</span>
+                    <el-avatar shape="square" :size="150" fit="cover" :src="props.row.photo"></el-avatar>
+                </div>
+                <h3>简历</h3>
+                <p m="t-0 b-2">{{ props.row.resume }}</p>
+            </template>
+        </el-table-column>
+        <el-table-column type="index" label="#" width="60" fixed></el-table-column>
+        <el-table-column prop="name" label="姓名" fixed width="120"></el-table-column>
+        <el-table-column prop="no" label="学号"></el-table-column>
+        <el-table-column label="性别">
+            <template #default="scope">
+                <el-tag type="primary" v-if="scope.row.gender==1">男</el-tag>
+                <el-tag type="danger" v-else-if="scope.row.gender==0">女</el-tag>
+            </template>
+        </el-table-column>
+        <el-table-column prop="birth" label="生日" :formatter="dateFormatter"></el-table-column>
+        <el-table-column prop="dept" label="学院"></el-table-column>
+        <el-table-column prop="clas" label="班级"></el-table-column>
+        <el-table-column prop="email" label="邮箱"></el-table-column>
+        <el-table-column fixed="right" width="180">
+            <template #header>
+                <el-input v-model="page.query" @keydown.enter="initPage" size="small" placeholder="输入学生姓名搜索"/>
+            </template>
+            <template #default="scope">
+                <el-button size="small" type="warning" @click="toEdit(scope.$index, scope.row)">
+                    编辑
+                </el-button>
+
+                <el-popconfirm title="确定删除吗？" @confirm="handleDelete(scope.row.id)">
+                    <template #reference>
+                        <el-button size="small" type="danger">删除</el-button>
+                    </template>
+                </el-popconfirm>
+            </template>
+        </el-table-column>
+
+    </el-table>
+    <br>
+    <el-pagination background layout="prev, pager, next" :total="page.total"
+                   @current-change="changePage"></el-pagination>
+
+    <el-dialog v-model="dialogVisible" :title="isAdd ? '添加':'修改'" width="500" @close="resetForm">
+        <el-form :model="form" :rules="formRule" ref="formRef" label-width="auto" style="max-width: 490px">
+            <!--头像-->
+            <el-form-item>
+                <el-upload
+                        ref="upload"
+                        class="upload-demo"
+                        :show-file-list="false"
+                        action="/file/upload/img"
+                        :on-success="handleAvatarSuccess"
+                        :auto-upload="true"
+                >
+                    <el-avatar :size="100" :src="form.photo"></el-avatar>
+                </el-upload>
+            </el-form-item>
+            <el-form-item label="学号" prop="no" :rules="{validator: checkUsername, trigger: 'blur'}">
+                <el-input :disabled="!isAdd" v-model="form.no" prefix-icon="User"></el-input>
+            </el-form-item>
+            <el-form-item label="姓名">
+                <el-input v-model="form.name" prefix-icon="CircleCheck"></el-input>
+            </el-form-item>
+            <el-form-item label="院系">
+                <el-input v-model="form.dept" prefix-icon="CircleCheck"></el-input>
+            </el-form-item>
+            <el-form-item label="班级">
+                <el-input v-model="form.clas" prefix-icon="CircleCheck"></el-input>
+            </el-form-item>
+            <el-form-item label="性别">
+                <el-select v-model="form.gender" placeholder="请选择性别" prefix-icon="Female">
+                    <el-option label="不愿透露" value="-1"></el-option>
+                    <el-option label="男" value="1"></el-option>
+                    <el-option label="女" value="0"></el-option>
+                </el-select>
+            </el-form-item>
+            <el-form-item label="生日">
+                <el-date-picker
+                        v-model="form.birth"
+                        type="date"
+                        placeholder="请选择日期"
+                ></el-date-picker>
+            </el-form-item>
+            <el-form-item label="邮箱">
+                <el-input
+                        prefix-icon="Message"
+                        v-model="form.emailPrefix"
+                        style="max-width: 600px"
+                        placeholder="请输入邮箱"
+                        class="input-with-select"
+                >
+                    <template #append>
+                        <el-select v-model="form.emailSuffix" placeholder="Select" style="width: 115px">
+                            <el-option label="@qq.com" value="@qq.com"></el-option>
+                            <el-option label="@163.com" value="@163.com"></el-option>
+                            <el-option label="@gmail.com" value="@gmail.com"></el-option>
+                        </el-select>
+                    </template>
+                </el-input>
+            </el-form-item>
+            <el-form-item label="简历">
+                <el-input v-model="form.resume" type="textarea"></el-input>
+            </el-form-item>
+        </el-form>
+        <template #footer>
+            <div class="dialog-footer">
+                <el-button @click="resetForm(formRef)" v-if="isAdd">重置</el-button>
+                <el-button type="primary" @click="commit">
+                    提交
+                </el-button>
+            </div>
+        </template>
+    </el-dialog>
+</div>
+</body>
+</html>
+
+<script>
+    window.ELMSG = ElementPlus.ElMessage
+
+    const {createApp, reactive, ref, toRefs, onMounted} = Vue
+
+    const app = createApp({
+        setup(props, context) {
+            let reqPath = 'stu'
+            const state = reactive({
+                tableData: [],
+                page: {
+                    pageNum: 1,
+                    pageSize: 10,
+                    query: ''
+                },
+                form: {
+                    id: '',
+                    no: '',
+                    name: '',
+                    gender: '',
+                    birth: '',
+                    dept: '',
+                    clas: '',
+                    emailPrefix: '',
+                    emailSuffix: '',
+                    email: '',
+                    resume: '',
+                    photo: ''
+                },
+                dialogVisible: false,
+                isAdd: true,
+                dialogTitle: '添加',
+                formRule: {}
+            })
+            // 初始化页面
+            const initPage = async () => {
+                const {data: res} = await $axios.get(`${reqPath}?pageNum=${state.page.pageNum}&pageSize=${state.page.pageSize}&query=${state.page.query}`)
+                console.log(res)
+                state.tableData = res.list
+                state.page.total = res.total
+            }
+
+            // 跳转页面
+            const changePage = (pageNum) => {
+                state.page.pageNum = pageNum
+                initPage()
+            }
+
+            // 删除
+            const handleDelete = (id) => {
+                $axios.delete(reqPath + '/' + id).then(res => {
+                    if (res.status == 200) {
+                        ElementPlus.ElMessage({type: 'success', message: '删除成功'})
+                    } else {
+                        ElementPlus.ElMessage({type: 'error', message: res.msg})
+                    }
+                    initPage()
+                })
+            }
+
+            const toEdit = (index, data) => {
+                state.form = {...data}
+                let em = data.email
+                let prefix = em.substring(0, em.lastIndexOf('@'))
+                let suffix = em.substring(em.lastIndexOf('@'))
+                state.form.emailPrefix = prefix
+                state.form.emailSuffix = suffix
+                state.isAdd = false
+                state.dialogVisible = true
+
+            }
+            const toAdd = () => {
+                state.isAdd = true
+                state.dialogVisible = true
+            }
+
+
+            const commitEdit = async () => {
+                await $axios.put(reqPath, state.form).then(res => {
+                    if (res.status !== 200) {
+                        throw new Error("失败，请稍后重试")
+                    }
+                    return res
+                })
+            }
+
+            const commit = () => {
+                state.form.email = state.form.emailPrefix + state.form.emailSuffix
+                const promise = state.isAdd ? commitAdd() : commitEdit();
+                promise.then(value => {
+                    ElementPlus.ElMessage({message: '成功', type: 'success'})
+                    state.dialogVisible = false
+                    resetForm()
+                    initPage()
+                }, reason => {
+                    ElementPlus.ElMessage({message: reason.msg, type: 'error'})
+                })
+            }
+
+            const commitAdd = async () => {
+                const res = await $axios.post(reqPath, state.form)
+                console.log(res)
+                if (res.status === 500) {
+                    throw new Error("失败")
+                }
+                return res
+            }
+
+            const resetForm = (form) => {
+                // if (!form) return
+                // form.resetFields()
+                state.form = {id: ''}
+
+            }
+
+            // 处理头像上传成功
+            const handleAvatarSuccess = (res) => {
+                state.form.avatarUrl = res.data.url
+                state.form.photo = res.data.uri
+            }
+
+            const checkUsername = (rule, value, cb) => {
+                if (!value || value.trim() == '') return cb(new Error('请输入'))
+                $axios.get(`${reqPath}/check?no=${state.form.no}&id=${state.form.id}`).then(res => {
+                    if (res.status === 200) return cb()
+                    return cb(new Error(res.msg))
+                })
+            }
+
+
+            const dateFormatter = (row, column, value) => {
+                let date = new Date(value)
+                return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`
+            }
+            initPage()
+            return {
+                ...toRefs(state),
+                changePage,
+                initPage,
+                handleDelete,
+                handleAvatarSuccess,
+                toEdit,
+                commit,
+                toAdd,
+                resetForm,
+                checkUsername,
+                dateFormatter
+            }
+        }
+    })
+
+    const {User, Lock, Plus, Message, Phone, Female, CircleCheck} = ElementPlusIconsVue
+
+    // 图标库
+    app.component('User', User)
+    app.component('Lock', Lock)
+    app.component('Plus', Plus)
+    app.component('Message', Message)
+    app.component('Phone', Phone)
+    app.component('Female', Female)
+    app.component('CircleCheck', CircleCheck)
+    app.use(ElementPlus)
+
+    app.mount('#app')
+
+</script>

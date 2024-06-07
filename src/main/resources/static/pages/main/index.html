@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>大学生就业管理系统</title>
+    <base href="/">
+    <link rel="stylesheet" href="css/index.css"/>
+    <script src="js/vue.global.js"></script>
+    <script src="js/index.full.js"></script>
+    <script src="js/jquery.js"></script>
+    <script src="js/axios.js"></script>
+    <script src="js/index.iife.min.js"></script>
+    <link rel="stylesheet" href="css/my.css">
+    <script src="js/request.js"></script>
+
+    <style lang="less">
+        .common-layout {
+            width: 100%;
+            background-color: #fff;
+        }
+
+        .el-header, .el-footer {
+            color: #fff;
+        }
+
+        .el-header {
+            display: block;
+            height: 70px;
+        }
+
+        .el-header > h1 {
+            text-align: center;
+        }
+
+        .el-footer {
+            text-align: center;
+            line-height: 60px;
+        }
+
+        .el-aside, .el-container, .common-layout {
+            height: 100%;
+        }
+
+        .el-menu {
+            height: 93%;
+            overflow: hidden;
+            border-right: 0 !important;
+        }
+
+        .end {
+            position: absolute;
+            width: 120px;
+            height: 60px;
+            right: 0;
+            top: 5px;
+
+        }
+
+        .el-card {
+            height: 98%;
+            overflow: hidden !important;
+        }
+
+        .el-card__body {
+            height: 90%;
+        }
+
+        .c_iframe {
+            width: 100%;
+            height: 100%;
+            border: 0;
+            overflow: hidden;
+        }
+
+        .divTmp {
+            width: 100%;
+            height: 100%;
+        }
+
+        .logo {
+            width: 100%;
+            height: 30px;
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <div class="common-layout">
+        <el-container>
+            <el-aside :width="!isCollapse ? '64px':'200px'">
+                <div class="logo"></div>
+                <div class="collapseChange">
+                    <el-switch v-model="isCollapse"></el-switch>
+                </div>
+                <el-menu
+                        default-active="2"
+                        class="el-menu-vertical-demo"
+                        :collapse="!isCollapse"
+                        @open="handleOpen"
+                        @close="handleClose"
+                >
+                    <el-menu-item :index="item.url" v-for="item in menus" :key="item.id" @click="menuHandle(item.url)">
+                        <i class="el-icon">
+                            <img style="width: 20px;" :src="item.svg">
+                        </i>
+                        <template #title>{{item.title}}</template>
+                    </el-menu-item>
+
+                </el-menu>
+            </el-aside>
+            <el-container>
+                <!--头部-->
+                <el-header>
+                    <h1>大学生就业管理系统</h1>
+                    <div class="end">
+                        <el-dropdown>
+                            <el-avatar :size="60" :src=" userInfo ? userInfo.avatar:''"> <!--@error="errorHandler"-->
+                                <!--@error="errorHandler"-->
+                                <!-- <img :src="userInfo.avatar"/>-->
+                            </el-avatar>
+                            <template #dropdown>
+                                <el-dropdown-menu>
+                                    <el-dropdown-item @click="logout">退出登录</el-dropdown-item>
+                                </el-dropdown-menu>
+                            </template>
+                        </el-dropdown>
+                    </div>
+                </el-header>
+                <el-main>
+                    <!--路由占位符-->
+                    <el-card v-loading="loading">
+                        <div class="divTmp" v-show="loading"></div>
+                        <iframe
+                                id="cIframe"
+                                class="c_iframe"
+                                name="cIframe"
+                                :src="iframeUrl"
+                                width="100%"
+                                height="auto"
+                                frameborder="0"
+                                v-show="!loading"
+                        ></iframe>
+                    </el-card>
+                </el-main>
+                <el-footer>Copyright &copy; 姚文康</el-footer>
+            </el-container>
+        </el-container>
+    </div>
+</div>
+
+<template id="users">
+    <div class="wrap">
+        <h1>用户列表</h1>
+        <el-card>
+            <el-table :data="userList" height="250" style="width: 100%">
+                <el-table-column label="#" type="index" width="80"></el-table-column>
+                <el-table-column prop="username" label="用户名"></el-table-column>
+                <el-table-column prop="password" label="密码"></el-table-column>
+                <!--邮箱-->
+                <el-table-column label="邮箱" width="180">
+                    <template #default="{row}">
+                        {{row.emailPrefix}}{{row.emailSuffix}}
+                    </template>
+                </el-table-column>
+                <el-table-column prop="phone" label="电话"></el-table-column>
+                <!--性别-->
+                <el-table-column prop="gender" label="性别">
+                    <template #default="{row}">
+                        <span v-if="row.gender == 1">男</span>
+                        <span v-else-if="row.gender == 0">女</span>
+                        <span v-else>未知</span>
+                    </template>
+                </el-table-column>
+                <el-table-column prop="desc" label="简历"></el-table-column>
+                <el-table-column label="操作" width="180">
+                    <template #default="{row}">
+                        <el-button type="danger" @click="delUser(row.username)" size="small">删除</el-button>
+                    </template>
+                </el-table-column>
+            </el-table>
+        </el-card>
+    </div>
+</template>
+</body>
+</html>
+<script>
+
+    const {createApp, ref, reactive, toRefs, onMounted} = Vue
+    // vue实例
+    const vm = createApp({
+        setup() {
+
+            const state = reactive({
+                iframeUrl: 'pages/home/index.html',
+                loading: false,
+                menus: [
+                    {id: 1, url: 'pages/home/index.html', title: '首页', svg: 'image/index.svg'},
+                    {id: 2, url: 'pages/user/userlist.html', title: '用户列表', svg: 'image/user.svg'},
+                    {id: 3, url: 'pages/stu/stulist.html', title: '学生列表', svg: 'image/stu.svg'},
+                    {id: 4, url: 'pages/emp/emplist.html', title: '就业列表', svg: 'image/emp.svg'},
+                ],
+                userInfo: JSON.parse(localStorage.getItem('userInfo')),
+                loading: false
+            })
+
+            const menuHandle = (url) => {
+                state.loading = true
+                state.iframeUrl = url
+                setTimeout(() => {
+                    state.loading = false
+                }, 600)
+            }
+
+            const isCollapse = ref(true)
+            /**
+             *
+             * @param key
+             * @param keyPath
+             */
+            const handleOpen = (key, keyPath) => {
+                console.log(key, keyPath)
+            }
+            /**
+             *
+             * @param key
+             * @param keyPath
+             */
+            const handleClose = (key, keyPath) => {
+                console.log(key, keyPath)
+            }
+
+            const logout = () => {
+                console.log(123)
+                localStorage.removeItem('userInfo')
+                $axios.get("user/logout").then(res => {
+                    console.log(res)
+                    if (res.status == 200) {
+                        document.location.href = 'pages/login/login.html'
+                    }
+                })
+            }
+
+            onMounted(() => {
+
+                if (!state.userInfo) {
+                    ElementPlus.ElMessage({message: '请先登录', type: 'error'})
+                    setTimeout(() => {
+                        window.top.location.href = 'pages/login/login.html'
+                    }, 1000)
+                }
+            })
+            return {
+                ...toRefs(state), isCollapse, handleClose, handleOpen, logout, menuHandle
+            }
+        }
+    })
+
+    const {
+        Document,
+        Menu: IconMenu,
+        Location,
+        Setting,
+        User,
+        ArrowDown,
+        House,
+        OfficeBuilding,
+        UserFilled,
+    } = ElementPlusIconsVue
+    vm.use(ElementPlus)
+    vm.component('Document', Document)
+    vm.component('IconMenu', IconMenu)
+    vm.component('Location', Location)
+    vm.component('Setting', Setting)
+    vm.component('User', User)
+    vm.component('ArrowDown', ArrowDown)
+    vm.component('House', House)
+    vm.component('OfficeBuilding', OfficeBuilding)
+    vm.component('UserFilled', UserFilled)
+
+    vm.mount('#app')
+</script>

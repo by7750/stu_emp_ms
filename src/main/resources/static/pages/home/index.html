@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>index</title>
+    <base href="/">
+    <!--jquery-->
+    <script src="js/jquery.js"></script>
+    <link rel="stylesheet" href="css/index.css"/>
+    <script src="js/vue.global.js"></script>
+    <script src="js/index.full.js"></script>
+    <link href="css/layui.css" rel="stylesheet">
+    <style>
+        #table {
+            width: 400px;
+        }
+
+        #clock {
+            position: absolute;
+            right: 0;
+            top: 0;
+            font-size: 20px;
+        }
+
+        #logo {
+            width: 200px;
+            height: 200px;
+            position: absolute;
+            left: 50%;
+            top: 50%;
+            transform: translate(-50%, -50%);
+        }
+
+        #logo > img {
+            width: 200px;
+
+
+        }
+    </style>
+</head>
+<body>
+<div id="app">
+    <h1>系统概述</h1>
+    <div id="table">
+        <table class="layui-table" lay-skin="line">
+            <colgroup>
+                <col width="150">
+                <col width="150">
+                <col>
+            </colgroup>
+            <thead>
+            <tr>
+                <th>标题</th>
+                <th>描述</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr v-for="(item, index) in sysInfo" :key="index">
+                <td>{{item.title}}</td>
+                <td>{{item.desc}}</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <div id="logo"><img src="image/logo.png" alt=""></div>
+    <div id="clock">当前时间：<span></span></div>
+</div>
+</body>
+</html>
+<script>
+    let timestamp = Date.now()
+    setInterval(() => {
+        timestamp += 500
+        let date = new Date(timestamp);
+        $('div#clock>span').html(date.toLocaleTimeString())
+    }, 500)
+
+    const {createApp, reactive, toRefs} = Vue
+    const app = createApp({
+        setup() {
+            const state = reactive({
+                sysInfo: [
+                    {title: 'JDK版本', desc: '21'},
+                    {title: '后端框架', desc: 'SpringBoot'},
+                    {title: '数据库', desc: 'MySQL 8.0.30'},
+
+                ]
+            })
+            return {
+                ...toRefs(state)
+            }
+        }
+    })
+
+    app.mount("#app")
+</script>
