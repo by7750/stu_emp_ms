@@ -41,8 +41,8 @@ public class EmploymentController {
 
     }
 
-    @DeleteMapping
-    public ResultInfo deleteUser(Long id) {
+    @DeleteMapping("/{id}")
+    public ResultInfo deleteUser(@PathVariable Long id) {
         boolean b = employmentService.removeById(id);
         return b ? ResultInfo.success() : ResultInfo.error("失败");
 

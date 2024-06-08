@@ -87,7 +87,9 @@
 
     </el-table>
     <br>
-    <el-pagination background layout="prev, pager, next" :total="page.total"
+    <el-pagination background layout="prev, pager, next"
+                   :page-size="page.pageSize"
+                   :total="page.total"
                    @current-change="changePage"></el-pagination>
 
     <el-dialog v-model="dialogVisible" :title="isAdd ? '添加':'修改'" width="500" @close="resetForm">
