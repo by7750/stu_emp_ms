@@ -34,24 +34,24 @@ public class EmploymentController {
     }
 
     @PostMapping
-    public ResultInfo addEmp(@RequestBody Employment employment, String stuNo) {
-        Student one = studentService.getByNo(stuNo);
-        if (one == null) {
-            return ResultInfo.error("学号不存在");
-        }
-        employment.setSid(one.getId());
-        boolean b = employmentService.save(employment);
-        return b ? ResultInfo.success() : ResultInfo.error("失败");
+    public ResultInfo addEmp(@RequestBody Employment employment) {
+        return saveOne(employment, true);
     }
 
     @PutMapping
-    public ResultInfo updateEmp(@RequestBody Employment employment, String stuNo) {
-        Student one = studentService.getByNo(stuNo);
+    public ResultInfo updateEmp(@RequestBody Employment employment) {
+
+        return saveOne(employment, false);
+    }
+
+    private ResultInfo saveOne(Employment employment, boolean isAdd) {
+        Student one = studentService.getByNo(employment.getStuNo());
         if (one == null) {
             return ResultInfo.error("学号不存在");
         }
         employment.setSid(one.getId());
-        boolean b = employmentService.updateById(employment);
+        employment.setName(one.getName());
+        boolean b = isAdd ? employmentService.save(employment) : employmentService.updateById(employment);
         return b ? ResultInfo.success() : ResultInfo.error("失败");
     }
 

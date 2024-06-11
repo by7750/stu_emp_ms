@@ -12,9 +12,8 @@ import java.io.Serializable;
 import java.util.Date;
 
 /**
-* 
-* @TableName employment
-*/
+ * @TableName employment
+ */
 @TableName("employment")
 @Data
 public class Employment implements Serializable {
@@ -35,6 +34,9 @@ public class Employment implements Serializable {
     private Date endDate;
 
     private String contract;
+
+    @TableField(exist = false)
+    private String stuNo;
 
 
 }

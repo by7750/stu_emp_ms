@@ -218,6 +218,8 @@
             }
 
             const commit = () => {
+                if (!state.form.username || !state.form.password || state.form.username.trim() == '' || state.form.password.trim() == '')
+                    return ElementPlus.ElMessage.error("请输入用户名和密码")
                 state.form.email = state.form.emailPrefix + state.form.emailSuffix
                 const promise = state.isAdd ? commitAdd() : commitEdit();
                 promise.then(value => {
@@ -233,7 +235,7 @@
             const commitAdd = async () => {
                 const res = await $axios.post(reqPath, state.form)
                 console.log(res)
-                if (res.status === 500) {
+                if (res.status !== 200) {
                     throw new Error(res.msg)
                 }
                 return res
