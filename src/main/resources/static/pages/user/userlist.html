@@ -211,7 +211,7 @@
             const commitEdit = async () => {
                 await $axios.put(reqPath, state.form).then(res => {
                     if (res.status !== 200) {
-                        throw new Error("失败，请稍后重试")
+                        throw new Error(res.msg)
                     }
                     return res
                 })
@@ -226,7 +226,7 @@
                     resetForm()
                     initPage()
                 }, reason => {
-                    ElementPlus.ElMessage({message: reason.msg, type: 'error'})
+                    ElementPlus.ElMessage({message: reason.message, type: 'error'})
                 })
             }
 
@@ -234,7 +234,7 @@
                 const res = await $axios.post(reqPath, state.form)
                 console.log(res)
                 if (res.status === 500) {
-                    throw new Error("失败")
+                    throw new Error(res.msg)
                 }
                 return res
             }
