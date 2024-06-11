@@ -83,7 +83,7 @@
         <el-form :model="form" :rules="formRule" ref="formRef" label-width="auto" style="max-width: 490px">
 
             <el-form-item label="学号">
-                <el-input v-model="form.stuNo" prefix-icon="Search"></el-input>
+                <el-input v-model="form.stuNo" prefix-icon="Search" @change="findStu"></el-input>
             </el-form-item>
             <el-form-item label="姓名">
                 <el-input v-model="form.name" disabled prefix-icon="CircleCheck"></el-input>
@@ -234,6 +234,11 @@
                 let date = new Date(value)
                 return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`
             }
+            const findStu = async () => {
+                const res = await $axios.get("stu/no/" + state.form.stuNo)
+                if (res.status == 200) state.form.name = res.data.name
+                else state.form.name = ''
+            }
 
             initPage()
             return {
@@ -246,12 +251,13 @@
                 toAdd,
                 resetForm,
                 date,
-                dateFormatter
+                dateFormatter,
+                findStu
             }
         }
     })
 
-    const {User, Lock, Plus, Message, Phone, Female, CircleCheck,Search} = ElementPlusIconsVue
+    const {User, Lock, Plus, Message, Phone, Female, CircleCheck, Search} = ElementPlusIconsVue
 
     // 图标库
     app.component('User', User)
