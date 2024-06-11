@@ -26,6 +26,12 @@ public class StudentController {
         return ResultInfo.success(pageInfo);
     }
 
+    @GetMapping("/sno/{stuNo}")
+    public ResultInfo student(@PathVariable String stuNo) {
+        Student stu = studentService.getByNo(stuNo);
+        return stu == null ? ResultInfo.error("不存在") : ResultInfo.success(stu);
+    }
+
     @PostMapping
     public ResultInfo addStudent(@RequestBody Student student) {
         boolean b = studentService.save(student);

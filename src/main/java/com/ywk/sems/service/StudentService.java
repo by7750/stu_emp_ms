@@ -11,4 +11,6 @@ import com.baomidou.mybatisplus.extension.service.IService;
 public interface StudentService extends IService<Student> {
 
     boolean checkNo(Student student);
+
+    Student getByNo(String sno);
 }

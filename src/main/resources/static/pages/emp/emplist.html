@@ -82,8 +82,11 @@
     <el-dialog v-model="dialogVisible" :title="isAdd ? '添加':'修改'" width="500" @close="resetForm">
         <el-form :model="form" :rules="formRule" ref="formRef" label-width="auto" style="max-width: 490px">
 
+            <el-form-item label="学号">
+                <el-input v-model="form.stuNo" prefix-icon="Search"></el-input>
+            </el-form-item>
             <el-form-item label="姓名">
-                <el-input v-model="form.name" prefix-icon="CircleCheck"></el-input>
+                <el-input v-model="form.name" disabled prefix-icon="CircleCheck"></el-input>
             </el-form-item>
             <el-form-item label="公司名">
                 <el-input v-model="form.company" prefix-icon="CircleCheck"></el-input>
@@ -136,7 +139,8 @@
                     startDate: '',
                     endDate: '',
                     contract: '',
-                    date: []
+                    date: [],
+                    stuNo: ''
                 },
                 dialogVisible: false,
                 isAdd: true,
@@ -247,7 +251,7 @@
         }
     })
 
-    const {User, Lock, Plus, Message, Phone, Female, CircleCheck} = ElementPlusIconsVue
+    const {User, Lock, Plus, Message, Phone, Female, CircleCheck,Search} = ElementPlusIconsVue
 
     // 图标库
     app.component('User', User)
@@ -257,6 +261,7 @@
     app.component('Phone', Phone)
     app.component('Female', Female)
     app.component('CircleCheck', CircleCheck)
+    app.component('Search', Search)
     app.use(ElementPlus)
 
     app.mount('#app')
