@@ -46,11 +46,14 @@ public class EmploymentController {
 
     private ResultInfo saveOne(Employment employment, boolean isAdd) {
         Student one = studentService.getByNo(employment.getStuNo());
-        if (one == null) {
+        System.out.println(employment);
+        if (one == null && isAdd) {
             return ResultInfo.error("学号不存在");
         }
-        employment.setSid(one.getId());
-        employment.setName(one.getName());
+        if (isAdd) {
+            employment.setSid(one.getId());
+            employment.setName(one.getName());
+        }
         boolean b = isAdd ? employmentService.save(employment) : employmentService.updateById(employment);
         return b ? ResultInfo.success() : ResultInfo.error("失败");
     }

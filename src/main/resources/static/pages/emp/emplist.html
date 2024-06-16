@@ -87,7 +87,7 @@
                           :disabled="!isAdd"
                           prefix-icon="Search"
                           @change="findStu"
-                          :placeholder="isAdd ? '在学生列表搜索姓名复制学号':'学号不可修改'"></el-input>
+                          :placeholder="isAdd ? '在学生列表搜索姓名复制学号':'不可修改'"></el-input>
             </el-form-item>
             <el-form-item label="姓名">
                 <el-input v-model="form.name" disabled prefix-icon="CircleCheck"></el-input>
@@ -189,6 +189,7 @@
             }
 
             const toEdit = (index, data) => {
+                console.log(data)
                 state.form = {...data}
                 state.isAdd = false
                 state.dialogVisible = true
@@ -201,6 +202,7 @@
 
 
             const commitEdit = async () => {
+
                 await $axios.put(reqPath, state.form).then(res => {
                     if (res.status !== 200) {
                         throw new Error(res.msg)
