@@ -90,10 +90,19 @@
                           :placeholder="isAdd ? '在学生列表搜索姓名复制学号':'不可修改'"></el-input>
             </el-form-item>
             <el-form-item label="姓名">
-                <el-input v-model="form.name" disabled prefix-icon="CircleCheck"></el-input>
+                <el-input v-model="form.name" disabled placeholder="输入学号自动填充"
+                          prefix-icon="CircleCheck"></el-input>
+            </el-form-item>
+            <el-form-item label="公司代码">
+                <el-input v-model="form.compNo"
+                          :disabled="!isAdd"
+                          prefix-icon="Search"
+                          @change="findFirm"
+                          :placeholder="isAdd ? '在公司列表搜公司名复制代码':'不可修改'"></el-input>
             </el-form-item>
             <el-form-item label="公司名">
-                <el-input v-model="form.company" prefix-icon="CircleCheck"></el-input>
+                <el-input v-model="form.company" disabled placeholder="输入公司代码自动填充"
+                          prefix-icon="CircleCheck"></el-input>
             </el-form-item>
             <el-form-item label="工作时间">
                 <el-date-picker
@@ -144,7 +153,8 @@
                     endDate: '',
                     contract: '',
                     date: [],
-                    stuNo: ''
+                    stuNo: '',
+                    compNo: '',
                 },
                 dialogVisible: false,
                 isAdd: true,
@@ -188,7 +198,8 @@
                 })
             }
 
-            const toEdit = (index, data) => {
+            const toEdit = async (index, data) => {
+                const res = $axios.get()
                 state.form = {...data}
                 state.isAdd = false
                 state.dialogVisible = true
@@ -244,6 +255,14 @@
                 else state.form.name = ''
             }
 
+            const findFirm = async () => {
+                const res = await $axios.get("comp/no/" + state.form.compNo)
+                if (res.status == 200) {
+                    state.form.company = res.data.name
+                    state.form.cid = res.data.id
+                } else state.form.company = ''
+            }
+
             initPage()
             return {
                 ...toRefs(state),
@@ -256,7 +275,8 @@
                 resetForm,
                 date,
                 dateFormatter,
-                findStu
+                findStu,
+                findFirm,
             }
         }
     })

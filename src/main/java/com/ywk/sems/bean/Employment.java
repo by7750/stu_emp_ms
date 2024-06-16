@@ -29,6 +29,9 @@ public class Employment implements Serializable {
 
     private String company;
 
+    @TableField("c_id")
+    private String cid;
+
     private Date startDate;
 
     private Date endDate;

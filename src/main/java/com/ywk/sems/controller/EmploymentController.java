@@ -35,6 +35,7 @@ public class EmploymentController {
 
     @PostMapping
     public ResultInfo addEmp(@RequestBody Employment employment) {
+        System.out.println(employment);
         return saveOne(employment, true);
     }
 
@@ -45,6 +46,7 @@ public class EmploymentController {
     }
 
     private ResultInfo saveOne(Employment employment, boolean isAdd) {
+
         Student one = studentService.getByNo(employment.getStuNo());
         System.out.println(employment);
         if (one == null && isAdd) {

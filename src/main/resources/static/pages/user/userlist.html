@@ -37,7 +37,12 @@
 <div id="app">
     <el-button type="primary" @click="toAdd">添加用户</el-button>
     <el-table :data="tableData" stripe>
-        <el-table-column type="index" label="#" width="180"></el-table-column>
+        <el-table-column type="index" label="#" width="80"></el-table-column>
+        <el-table-column label="头像">
+            <template #default="{row: user}">
+                <el-avatar :size="50" :src="user.avatar"/>
+            </template>
+        </el-table-column>
         <el-table-column prop="username" label="用户名" width="180"></el-table-column>
         <el-table-column prop="realName" label="姓名"></el-table-column>
         <el-table-column prop="email" label="电子邮箱"></el-table-column>
@@ -47,7 +52,7 @@
                 <el-tag type="danger" v-else-if="scope.row.gender==0">女</el-tag>
             </template>
         </el-table-column>
-        <el-table-column>
+        <el-table-column width="150">
             <template #header>
                 <el-input v-model="page.query" @keydown.enter="initPage" size="small" placeholder="输入用户名搜索"/>
             </template>

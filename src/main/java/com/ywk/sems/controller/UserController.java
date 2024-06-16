@@ -68,7 +68,7 @@ public class UserController {
     public ResultInfo getUser(int pageNum, int pageSize, String query) {
         PageHelper.startPage(pageNum, pageSize);
         LambdaQueryWrapper<User> lqw = new LambdaQueryWrapper<>();
-        lqw.like(User::getUsername, query);
+        lqw.like(User::getRealName, query);
         PageInfo<User> pageInfo = new PageInfo<>(userService.list(lqw));
         return ResultInfo.success(pageInfo);
     }
