@@ -29,8 +29,11 @@ public class WebMvcConfig extends WebMvcConfigurationSupport {
 
     @Override
     protected void addInterceptors(InterceptorRegistry registry) {
-        registry.addInterceptor(new LoginInterceptor()).excludePathPatterns(
-                "/user/login", "/user/register", "/user/check", "/**/*.html",
-                "**.html", "/js/**", "/css/**", "/image*/**", "/user/avatar", "/file/upload/img");
+//        registry.addInterceptor(new LoginInterceptor()).excludePathPatterns(
+//                "/user/login", "/user/register", "/user/check", "/**/*.html",
+//                "**.html", "/js/**", "/css/**", "/image*/**", "/user/avatar", "/file/upload/img");
+        registry.addInterceptor(new LoginInterceptor())
+                .addPathPatterns("/user/**", "/stu/**", "/emp/**", "/comp/**")
+                .excludePathPatterns("/user/login", "/user/register", "/user/check", "/user/avatar");
     }
 }

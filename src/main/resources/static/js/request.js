@@ -5,7 +5,7 @@
         // axios中请求配置有baseURL选项，表示请求URL公共部分
         baseURL: '/',
         // 超时
-        timeout: 1000000
+        timeout: 20000
     })
 
     // 响应拦截器

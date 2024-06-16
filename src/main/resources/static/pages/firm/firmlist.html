@@ -24,6 +24,7 @@
             position: absolute;
             left: 50%;
             top: 30%;
+            width: 200px;
             transform: translate(-50%, -50%);
         }
 
@@ -31,39 +32,66 @@
             height: 100%;
         }
 
-        .demo-fit .block {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            flex-grow: 0;
+        /* .demo-fit .block {
+             flex: 1;
+             display: flex;
+             flex-direction: column;
+             flex-grow: 0;
+         }*/
+
+        .avatar-uploader .el-upload {
+            border: 1px dashed var(--el-border-color);
+            border-radius: 6px;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden;
+            transition: var(--el-transition-duration-fast);
         }
 
+        .avatar-uploader .el-upload:hover {
+            border-color: var(--el-color-primary);
+        }
+
+        .el-icon.avatar-uploader-icon {
+            font-size: 28px;
+            color: #8c939d;
+            width: 150px;
+            height: 150px;
+            text-align: center;
+        }
     </style>
 
 </head>
 <body>
 <div id="app">
-    <el-button type="primary" @click="toAdd">添加就业信息</el-button>
+    <el-button type="primary" @click="toAdd">添加公司信息</el-button>
     <el-table :data="tableData" stripe>
-        <el-table-column type="expand">
+
+        <el-table-column type="expand" fixed>
             <template #default="props">
-                <h3>合同信息</h3>
-                <p>{{ props.row.contract }}</p>
+                <div class="block">
+                    <h2 class="title">公司图片</h2>
+                    <el-avatar shape="square" :size="150" fit="cover" :src="props.row.photo"></el-avatar>
+                </div>
+                <h2>公司简介</h2>
+                <p m="t-0 b-2">{{ props.row.intro }}</p>
             </template>
         </el-table-column>
-        <el-table-column type="index" label="#" width="60"></el-table-column>
-        <el-table-column prop="name" label="姓名" width="120"></el-table-column>
-        <el-table-column prop="company" label="公司"></el-table-column>
-        <el-table-column prop="startDate" label="开始时间" :formatter="dateFormatter"></el-table-column>
-        <el-table-column prop="endDate" label="结束时间" :formatter="dateFormatter"></el-table-column>
-        <el-table-column>
+        <el-table-column type="index" label="#" width="60" fixed></el-table-column>
+        <el-table-column prop="no" label="公司代码"></el-table-column>
+        <el-table-column prop="name" label="公司名称" fixed></el-table-column>
+        <el-table-column prop="addr" label="地址"></el-table-column>
+        <el-table-column prop="email" label="邮箱"></el-table-column>
+
+        <el-table-column fixed="right" width="180">
             <template #header>
-                <el-input v-model="page.query" @keydown.enter="initPage" size="small" placeholder="输入学生姓名搜索"/>
+                <el-input v-model="page.query" @keydown.enter="initPage" size="small" placeholder="输入公司名搜索"/>
             </template>
             <template #default="scope">
                 <el-button size="small" type="warning" @click="toEdit(scope.$index, scope.row)">
                     编辑
                 </el-button>
+
                 <el-popconfirm title="确定删除吗？" @confirm="handleDelete(scope.row.id)">
                     <template #reference>
                         <el-button size="small" type="danger">删除</el-button>
@@ -82,30 +110,51 @@
     <el-dialog v-model="dialogVisible" :title="isAdd ? '添加':'修改'" width="500" @close="resetForm">
         <el-form :model="form" :rules="formRule" ref="formRef" label-width="auto" style="max-width: 490px">
 
-            <el-form-item label="学号">
-                <el-input v-model="form.stuNo"
-                          :disabled="!isAdd"
-                          prefix-icon="Search"
-                          @change="findStu"
-                          :placeholder="isAdd ? '在学生列表搜索姓名复制学号':'不可修改'"></el-input>
+            <el-form-item label="公司代码" prop="no" :rules="{validator: check, trigger: 'blur'}">
+                <el-input :disabled="!isAdd" v-model="form.no" prefix-icon="User"></el-input>
             </el-form-item>
-            <el-form-item label="姓名">
-                <el-input v-model="form.name" disabled prefix-icon="CircleCheck"></el-input>
+            <el-form-item label="名称">
+                <el-input v-model="form.name" prefix-icon="CircleCheck"></el-input>
             </el-form-item>
-            <el-form-item label="公司名">
-                <el-input v-model="form.company" prefix-icon="CircleCheck"></el-input>
+            <el-form-item label="地址">
+                <el-input v-model="form.addr" prefix-icon="CircleCheck"></el-input>
             </el-form-item>
-            <el-form-item label="工作时间">
-                <el-date-picker
-                        v-model="date"
-                        type="daterange"
-                        range-separator="至"
-                        start-placeholder="开始日期"
-                        end-placeholder="结束日期"
-                ></el-date-picker>
+            <el-form-item label="邮箱">
+                <el-input
+                        prefix-icon="Message"
+                        v-model="form.emailPrefix"
+                        style="max-width: 600px"
+                        placeholder="请输入邮箱"
+                        class="input-with-select"
+                >
+                    <template #append>
+                        <el-select v-model="form.emailSuffix" placeholder="Select" style="width: 115px">
+                            <el-option label="@qq.com" value="@qq.com"></el-option>
+                            <el-option label="@163.com" value="@163.com"></el-option>
+                            <el-option label="@gmail.com" value="@gmail.com"></el-option>
+                        </el-select>
+                    </template>
+                </el-input>
             </el-form-item>
-            <el-form-item label="合同">
-                <el-input v-model="form.contract" type="textarea"></el-input>
+
+            <el-form-item label="简介">
+                <el-input v-model="form.intro" type="textarea"></el-input>
+            </el-form-item>
+
+            <el-form-item label="图片">
+                <el-upload
+                        ref="upload"
+                        class="upload-demo avatar-uploader"
+                        :show-file-list="false"
+                        action="/file/upload/img"
+                        :on-success="handleAvatarSuccess"
+                        :auto-upload="true"
+                >
+                    <el-avatar v-if="form.photo" shape="square" :size="150" fit="cover" :src="form.photo"></el-avatar>
+                    <el-icon v-else class="avatar-uploader-icon">
+                        <Plus></Plus>
+                    </el-icon>
+                </el-upload>
             </el-form-item>
         </el-form>
         <template #footer>
@@ -124,11 +173,11 @@
 <script>
     window.ELMSG = ElementPlus.ElMessage
 
-    const {createApp, reactive, ref, toRefs, onMounted, computed} = Vue
+    const {createApp, reactive, ref, toRefs, onMounted} = Vue
 
     const app = createApp({
         setup(props, context) {
-            let reqPath = 'emp'
+            let reqPath = 'comp'
             const state = reactive({
                 tableData: [],
                 page: {
@@ -138,13 +187,13 @@
                 },
                 form: {
                     id: '',
+                    no: '',
                     name: '',
-                    company: '',
-                    startDate: '',
-                    endDate: '',
-                    contract: '',
-                    date: [],
-                    stuNo: ''
+                    emailPrefix: '',
+                    emailSuffix: '',
+                    email: '',
+                    addr: '',
+                    intro: '',
                 },
                 dialogVisible: false,
                 isAdd: true,
@@ -158,17 +207,6 @@
                 state.tableData = res.list
                 state.page.total = res.total
             }
-
-            const date = computed({
-                get() {
-                    return [state.form.startDate, state.form.endDate]
-                },
-                set(val) {
-                    console.log(val)
-                    state.form.startDate = val[0]
-                    state.form.endDate = val[1]
-                }
-            })
 
             // 跳转页面
             const changePage = (pageNum) => {
@@ -190,6 +228,11 @@
 
             const toEdit = (index, data) => {
                 state.form = {...data}
+                let em = data.email
+                let prefix = em.substring(0, em.lastIndexOf('@'))
+                let suffix = em.substring(em.lastIndexOf('@'))
+                state.form.emailPrefix = prefix
+                state.form.emailSuffix = suffix
                 state.isAdd = false
                 state.dialogVisible = true
 
@@ -210,6 +253,7 @@
             }
 
             const commit = () => {
+                state.form.email = state.form.emailPrefix + state.form.emailSuffix
                 const promise = state.isAdd ? commitAdd() : commitEdit();
                 promise.then(value => {
                     ElementPlus.ElMessage({message: '成功', type: 'success'})
@@ -230,38 +274,50 @@
                 return res
             }
 
-            const resetForm = () => {
+            const resetForm = (form) => {
+                // if (!form) return
+                // form.resetFields()
                 state.form = {id: ''}
+
             }
+
+            // 处理头像上传成功
+            const handleAvatarSuccess = (res) => {
+                state.form.photoUrl = res.data.url
+                state.form.photo = res.data.uri
+            }
+
+            const check = (rule, value, cb) => {
+                if (!value || value.trim() == '') return cb(new Error('请输入'))
+                $axios.get(`${reqPath}/check?no=${state.form.no}&id=${state.form.id}`).then(res => {
+                    if (res.status === 200) return cb()
+                    return cb(new Error(res.msg))
+                })
+            }
+
 
             const dateFormatter = (row, column, value) => {
                 let date = new Date(value)
                 return `${date.getFullYear()}-${(date.getMonth() + 1).toString().padStart(2, '0')}-${date.getDate().toString().padStart(2, '0')}`
             }
-            const findStu = async () => {
-                const res = await $axios.get("stu/no/" + state.form.stuNo)
-                if (res.status == 200) state.form.name = res.data.name
-                else state.form.name = ''
-            }
-
             initPage()
             return {
                 ...toRefs(state),
                 changePage,
                 initPage,
                 handleDelete,
+                handleAvatarSuccess,
                 toEdit,
                 commit,
                 toAdd,
                 resetForm,
-                date,
-                dateFormatter,
-                findStu
+                check,
+                dateFormatter
             }
         }
     })
 
-    const {User, Lock, Plus, Message, Phone, Female, CircleCheck, Search} = ElementPlusIconsVue
+    const {User, Lock, Plus, Message, Phone, Female, CircleCheck} = ElementPlusIconsVue
 
     // 图标库
     app.component('User', User)
@@ -271,7 +327,7 @@
     app.component('Phone', Phone)
     app.component('Female', Female)
     app.component('CircleCheck', CircleCheck)
-    app.component('Search', Search)
+    app.component('CircleCheck', CircleCheck)
     app.use(ElementPlus)
 
     app.mount('#app')
