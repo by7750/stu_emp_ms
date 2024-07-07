@@ -223,7 +223,7 @@
             }
 
             const commit = () => {
-                if (!state.form.username || !state.form.password || state.form.username.trim() == '' || state.form.password.trim() == '')
+                if (!state.form.username || !state.form.password || !state.form.username.trim() || !state.form.password.trim())
                     return ElementPlus.ElMessage.error("请输入用户名和密码")
                 state.form.email = state.form.emailPrefix + state.form.emailSuffix
                 const promise = state.isAdd ? commitAdd() : commitEdit();

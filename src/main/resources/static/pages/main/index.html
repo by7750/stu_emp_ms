@@ -34,7 +34,8 @@
 
         .el-footer {
             text-align: center;
-            line-height: 60px;
+            line-height: 45px;
+            height: 45px;
         }
 
         .el-aside, .el-container, .common-layout {
@@ -98,6 +99,7 @@
                         :collapse="!isCollapse"
                         @open="handleOpen"
                         @close="handleClose"
+                        :default-active="defaultActive"
                 >
                     <el-menu-item :index="item.url" v-for="item in menus" :key="item.id" @click="menuHandle(item.url)">
                         <i class="el-icon">
@@ -105,7 +107,12 @@
                         </i>
                         <template #title>{{item.title}}</template>
                     </el-menu-item>
-
+                    <el-menu-item @click="logout">
+                        <el-icon>
+                            <switch-button></switch-button>
+                        </el-icon>
+                        <span>退出登录</span>
+                    </el-menu-item>
                 </el-menu>
             </el-aside>
             <el-container>
@@ -120,6 +127,7 @@
                             </el-avatar>
                             <template #dropdown>
                                 <el-dropdown-menu>
+                                    <el-dropdown-item @click="toSelf">个人中心</el-dropdown-item>
                                     <el-dropdown-item @click="logout">退出登录</el-dropdown-item>
                                 </el-dropdown-menu>
                             </template>
@@ -127,7 +135,6 @@
                     </div>
                 </el-header>
                 <el-main>
-                    <!--路由占位符-->
                     <el-card v-loading="loading">
                         <div class="divTmp" v-show="loading"></div>
                         <iframe
@@ -147,45 +154,13 @@
         </el-container>
     </div>
 </div>
-
-<template id="users">
-    <div class="wrap">
-        <h1>用户列表</h1>
-        <el-card>
-            <el-table :data="userList" height="250" style="width: 100%">
-                <el-table-column label="#" type="index" width="80"></el-table-column>
-                <el-table-column prop="username" label="用户名"></el-table-column>
-                <el-table-column prop="password" label="密码"></el-table-column>
-                <!--邮箱-->
-                <el-table-column label="邮箱" width="180">
-                    <template #default="{row}">
-                        {{row.emailPrefix}}{{row.emailSuffix}}
-                    </template>
-                </el-table-column>
-                <el-table-column prop="phone" label="电话"></el-table-column>
-                <!--性别-->
-                <el-table-column prop="gender" label="性别">
-                    <template #default="{row}">
-                        <span v-if="row.gender == 1">男</span>
-                        <span v-else-if="row.gender == 0">女</span>
-                        <span v-else>未知</span>
-                    </template>
-                </el-table-column>
-                <el-table-column prop="desc" label="简历"></el-table-column>
-                <el-table-column label="操作" width="180">
-                    <template #default="{row}">
-                        <el-button type="danger" @click="delUser(row.username)" size="small">删除</el-button>
-                    </template>
-                </el-table-column>
-            </el-table>
-        </el-card>
-    </div>
-</template>
 </body>
 </html>
 <script>
 
-    const {createApp, ref, reactive, toRefs, onMounted} = Vue
+    const {ElMessageBox} = ElementPlus;
+
+    const {createApp, ref, reactive, toRefs, onMounted, markRaw, watch} = Vue
     // vue实例
     const vm = createApp({
         setup() {
@@ -199,18 +174,20 @@
                     {id: 3, url: 'pages/stu/stulist.html', title: '学生列表', svg: 'image/stu.svg'},
                     {id: 4, url: 'pages/firm/firmlist.html', title: '公司信息列表', svg: 'image/firm.svg'},
                     {id: 5, url: 'pages/emp/emplist.html', title: '就业列表', svg: 'image/emp.svg'},
+                    {id: 5, url: 'pages/self/selfinfo.html', title: '个人中心', svg: 'image/self.svg'},
                 ],
                 userInfo: JSON.parse(localStorage.getItem('userInfo')),
-                loading: false
+                loading: false,
+                defaultActive: '',
             })
 
             const menuHandle = (url) => {
-                state.loading = true
-                state.iframeUrl = url
-                setTimeout(() => {
-                    state.loading = false
-                }, 600)
+                localStorage.setItem('active', url)
+                load(url)
             }
+            watch(state.iframeUrl, () => {
+                console.log("change")
+            })
 
             const isCollapse = ref(true)
             /**
@@ -231,16 +208,30 @@
             }
 
             const logout = () => {
-                console.log(123)
-                localStorage.removeItem('userInfo')
-                $axios.get("user/logout").then(res => {
-                    console.log(res)
-                    if (res.status == 200) {
-                        document.location.href = 'pages/login/login.html'
+                ElMessageBox.confirm(
+                    '',
+                    '确定退出吗？',
+                    {
+                        confirmButtonText: '确定',
+                        cancelButtonText: '取消',
+                        type: 'danger',
+                        center: true,
+                        icon: markRaw(SwitchButton),
                     }
+                ).then(_ => {
+                    localStorage.removeItem('userInfo')
+                    $axios.get("user/logout").then(res => {
+                        console.log(res)
+                        if (res.status == 200) {
+                            document.location.href = 'pages/login/login.html'
+                        }
+                    })
                 })
             }
 
+            const toSelf = () => {
+                load('pages/self/selfinfo.html')
+            }
             onMounted(() => {
                 if (!state.userInfo) {
                     ElementPlus.ElMessage({message: '请先登录', type: 'error'})
@@ -248,9 +239,17 @@
                         window.top.location.href = 'pages/login/login.html'
                     }, 1000)
                 }
+                let active = localStorage.getItem('active');
+                load(active)
             })
+            const load = (url) => {
+                state.loading = true
+                state.iframeUrl = url
+                state.defaultActive = url
+                setTimeout(() => state.loading = false, 600)
+            }
             return {
-                ...toRefs(state), isCollapse, handleClose, handleOpen, logout, menuHandle
+                ...toRefs(state), isCollapse, handleClose, handleOpen, logout, menuHandle, toSelf
             }
         }
     })
@@ -265,6 +264,7 @@
         House,
         OfficeBuilding,
         UserFilled,
+        SwitchButton,
     } = ElementPlusIconsVue
     vm.use(ElementPlus)
     vm.component('Document', Document)
@@ -276,6 +276,7 @@
     vm.component('House', House)
     vm.component('OfficeBuilding', OfficeBuilding)
     vm.component('UserFilled', UserFilled)
+    vm.component('SwitchButton', SwitchButton)
 
     vm.mount('#app')
 </script>

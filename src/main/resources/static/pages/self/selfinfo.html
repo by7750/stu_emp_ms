@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>个人信息</title>
+    <base href="/">
+    <link rel="stylesheet" href="css/index.css"/>
+    <!-- Import Vue 3 -->
+    <script src="js/vue.global.js"></script>
+    <!-- Import component library -->
+    <script src="js/index.full.js"></script>
+    <!--axios-->
+    <script src="js/axios.js"></script>
+
+    <script src="js/index.iife.min.js"></script>
+
+    <script src="js/request.js"></script>
+
+</head>
+<body>
+<h1>个人中心</h1>
+
+<div id="app">
+    <el-form :model="form" label-width="auto" style="max-width: 490px">
+        <!--头像-->
+        <el-form-item label="头像">
+            <el-upload
+                    ref="upload"
+                    class="upload-demo"
+                    :show-file-list="false"
+                    action="/file/upload/img"
+                    :on-success="handleAvatarSuccess"
+                    :auto-upload="true"
+            >
+                <el-avatar :size="100" :src="form.avatar"></el-avatar>
+            </el-upload>
+        </el-form-item>
+        <el-form-item label="用户名" prop="username" :rules="{validator: checkUsername, trigger: 'blur'}">
+            <el-input :disabled="!isAdd" v-model="form.username" prefix-icon="User"></el-input>
+        </el-form-item>
+        <el-form-item label="密码">
+            <el-input v-model="form.password" type="password" prefix-icon="Lock"></el-input>
+        </el-form-item>
+        <el-form-item label="姓名">
+            <el-input v-model="form.realName" prefix-icon="CircleCheck"></el-input>
+        </el-form-item>
+        <el-form-item label="性别">
+            <el-select v-model="form.gender" placeholder="请选择性别" prefix-icon="Female">
+                <el-option label="不愿透露" value="-1"></el-option>
+                <el-option label="男" value="1"></el-option>
+                <el-option label="女" value="0"></el-option>
+            </el-select>
+        </el-form-item>
+        <el-form-item label="邮箱">
+            <el-input
+                    prefix-icon="Message"
+                    v-model="form.emailPrefix"
+                    style="max-width: 600px"
+                    placeholder="请输入邮箱"
+                    class="input-with-select"
+            >
+                <template #append>
+                    <el-select v-model="form.emailSuffix" placeholder="Select" style="width: 115px">
+                        <el-option label="@qq.com" value="@qq.com"></el-option>
+                        <el-option label="@163.com" value="@163.com"></el-option>
+                        <el-option label="@gmail.com" value="@gmail.com"></el-option>
+                    </el-select>
+                </template>
+            </el-input>
+        </el-form-item>
+    </el-form>
+    <div class="dialog-footer">
+        <el-button type="primary" @click="commit">
+            修改
+        </el-button>
+    </div>
+</div>
+
+</body>
+</html>
+<script>
+
+    const {createApp, reactive, ref, toRefs, onMounted} = Vue
+
+    const app = createApp({
+        setup() {
+            const state = reactive({
+                form: {
+                    id: '',
+                    username: '',
+                    password: '',
+                    realName: '',
+                    emailPrefix: '',
+                    emailSuffix: '',
+                    gender: '',
+                    avatar: ''
+                },
+            })
+
+
+            const commitEdit = async () => {
+                await $axios.put('user', state.form).then(res => {
+                    if (res.status !== 200) {
+                        throw new Error(res.msg)
+                    }
+                    return res
+                })
+            }
+            const commit = () => {
+                if (!state.form.username || !state.form.password || !state.form.username.trim() || !state.form.password.trim())
+                    return ElementPlus.ElMessage.error("请输入用户名和密码")
+                state.form.email = state.form.emailPrefix + state.form.emailSuffix
+
+                commitEdit().then(value => {
+                    ElementPlus.ElMessage({message: '修改成功', type: 'success'})
+                }, reason => {
+                    ElementPlus.ElMessage({message: reason.message, type: 'error'})
+                })
+            }
+            onMounted(() => {
+                let localUser = localStorage.getItem('userInfo');
+                if (!localUser) {
+                    window.top.location.href = 'page/login/login.html'
+                }
+                state.form = JSON.parse(localUser)
+
+                let em = state.form.email
+                state.form.password = null
+                state.form.emailPrefix = em.substring(0, em.lastIndexOf('@'))
+                state.form.emailSuffix = em.substring(em.lastIndexOf('@'))
+
+            })
+            return {
+                ...toRefs(state), commit
+            }
+        }
+    })
+
+    const {User, Lock, Plus, Message, Phone, Female, CircleCheck} = ElementPlusIconsVue
+
+    // 图标库
+    app.component('User', User)
+    app.component('Lock', Lock)
+    app.component('Plus', Plus)
+    app.component('Message', Message)
+    app.component('Phone', Phone)
+    app.component('Female', Female)
+    app.component('CircleCheck', CircleCheck)
+    app.use(ElementPlus)
+
+    app.mount('#app')
+
+
+</script>
